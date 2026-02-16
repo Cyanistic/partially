@@ -1,7 +1,7 @@
 use super::meta_attribute::MetaAttribute;
 use darling::{util::Flag, FromField, Result};
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{parse_quote, Ident, Path, Type, Visibility};
 
 #[derive(Debug, FromField)]
