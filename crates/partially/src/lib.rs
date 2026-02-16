@@ -42,6 +42,12 @@
 /// ### nested
 /// > Usage example: `#[partially(nested)]`
 /// Indicates to the macro that this field is [`Partial`]. The type in the generated struct will then be the associated [`Partial::Item`] type of the field's type and the struct's [`Partial::apply_some`] implementation will call [`Partial::apply_some`] on the field.
+/// ### skip_attributes
+/// > Usage example: `#[partially(skip_attributes)]`
+/// Instructs the macro to not add the existing attributes of the field to the generated struct's field.
+/// ### attribute
+/// > Usage example: `#[partially(attribute(serde(rename = "renamed")))]`
+/// Instructs the macro to add an attribute to the generated struct.
 ///
 /// ## Example
 /// ```

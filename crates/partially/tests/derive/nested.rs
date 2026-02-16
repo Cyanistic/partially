@@ -14,7 +14,6 @@ struct Data1 {
     d2: Data2,
 }
 
-
 #[test]
 fn nested_apply_some() {
     let mut data = Data1 {

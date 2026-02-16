@@ -1,6 +1,7 @@
+use super::meta_attribute::MetaAttribute;
 use darling::{util::Flag, FromField, Result};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{parse_quote, Ident, Path, Type, Visibility};
 
 #[derive(Debug, FromField)]
@@ -28,6 +29,18 @@ pub struct FieldReceiver {
     ///
     /// Note: This will create a generated struct that is missing the [`Self::ident`] field.
     pub omit: Flag,
+
+    /// Recieves a [`Vec<Meta>`] containing entries to prepend as attributes to the generated field.
+    ///
+    /// For example: `#[partially(attribute(serde(rename = "renamed"))]` would result in
+    /// `#[serde(rename = "renamed")]` being added to the field's attributes.
+    #[darling(rename = "attribute", multiple)]
+    pub additional_attrs: Vec<MetaAttribute>,
+
+    /// Determines whether the existing attributes of the field should be added to the generated
+    /// field
+    #[darling(rename = "skip_attributes")]
+    pub skip_attrs: Flag,
 
     /// A flag indicating that the given field should not be "partial-ized" and instead
     /// should be directly forwarded to the child.
@@ -111,15 +124,19 @@ impl FieldReceiver {
             ty
         };
 
-        let vis = &self.vis;
-        let forwarded_attrs = &self.attrs;
-
-        for attr in forwarded_attrs {
-            tokens.extend(quote! {
-                #attr
-            })
+        if !self.skip_attrs.is_present() {
+            for attr in &self.attrs {
+                tokens.extend(quote! {
+                    #attr
+                })
+            }
         }
 
+        for attr in &self.additional_attrs {
+            tokens.extend(quote!(#attr))
+        }
+
+        let vis = &self.vis;
         tokens.extend(quote! {
             #vis #dst_name: #dst_type
         })
@@ -143,6 +160,8 @@ mod test {
             ty: syn::Type::Verbatim(quote!(DummyField)),
             rename: None,
             omit: Flag::default(),
+            skip_attrs: Flag::default(),
+            additional_attrs: Vec::new(),
             transparent: Flag::default(),
             as_type: None,
             nested: Flag::default(),
@@ -222,7 +241,6 @@ mod test {
         instance.nested = Flag::present();
         assert!(instance.validate().is_err());
     }
-
 
     #[test]
     fn validate() {
